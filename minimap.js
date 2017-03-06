@@ -32,7 +32,8 @@ var Config = {
   x: 10,
   y: 60,
   bgColor: "#222",
-  opacity: ".7"
+  opacity: ".7",
+  zIndex: 2
 };
 
 var MiniMapHax = class {
@@ -111,7 +112,8 @@ var MiniMapHax = class {
       "top": (Config.y).addPx(),
       "position": "fixed",
       "background-color": Config.bgColor,
-      "opacity": Config.opacity
+      "opacity": Config.opacity,
+      "z-index": Config.zIndex
     });
 
     // Remove any old
