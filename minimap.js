@@ -2,7 +2,7 @@
 var Util = class {
 
   static removePx(str) {
-    return self.removeRight(str, 2);
+    return this.removeRight(str, 2);
   }
 
   static removeRight(str, i) {
@@ -15,35 +15,39 @@ String.prototype.removeRight = function (i) {
   return Util.removeRight(this, i);
 }
 
-String.prototype.removePX = function() {
+String.prototype.removePx = function() {
   return Util.removePx(this);
 }
 
 String.prototype.addPx = function() {
-  return this.addPx();
+  return this + "px";
 }
 
-String.protoType
+Number.prototype.addPx = function() {
+  return this + "px";
+}
+
+var Config = {
+  scale: .1,
+  x: 10,
+  y: 60,
+  bgColor: "#222",
+  opacity: ".7"
+};
 
 var MiniMapHax = class {
 
   constructor() {
-    // Config
-    this.scale = .1;
-    this.x = 0;
-    this.y = 0;
-    this.bgColor = "#222";
-    this.opacity = ".7";
     // Collect the goodness
     this.body = $("body");
     this.cursorsEl = $("#playcursors");
-    this.cursors = this.initCursors();
     this.myCursorsEl = false; // set later
     this.gridEl = $("#grid");
     this.grid = this.initGrid();
     this.miniMapBg = false; // set later
 
     this.initMiniMap();
+    this.cursors = this.initCursors();
   }
 
   main() {
@@ -56,27 +60,28 @@ var MiniMapHax = class {
       let name = el.data("playername");
       let x = el.css("left");
       let y = el.css("top");
-      let color1 = el.css("background");
-      let color2 = el.css("border-bottom");
+      let color1 = el.css("background-color");
+      let color2 = el.css("border-bottom-color");
       x = x.removePx();
       y = y.removePx();
       let cursorUi = $(`<div id="player-${name}" class="myCursor"></div>`);
       cursorUi.css({
+        "position": "absolute",
         "background-color": color1
       });
       // Add to DOM
-      this.body.append(cursorUi);
+      this.miniMapBg.append(cursorUi);
 
       return new Cursor(name, i, x, y, color1, color2, cursorUi, el);
     });
 
     // Cursor Styles
     this.myCursorsEl = $(".myCursor");
-    let w = Cursor.width * this.scale;
-    let h = Cursor.height * this.scale;
+    let w = Cursor.width * Config.scale;
+    let h = Cursor.height * Config.scale;
     this.myCursorsEl.css({
-      "width": Cursor.width * this.scale.addPx(),
-      "height": Cursor.height * this.scale.addPx()
+      "width": w > 0 ? (w).addPx() : 1,
+      "height": h > 0 ? (h).addPx() : 1
     });
 
     return cursors;
@@ -97,16 +102,16 @@ var MiniMapHax = class {
   initMiniMap() {
     // Construct
     this.miniMapBg = $("<div id='miniMapHax'></div>");
-    let w = this.grid.width * this.scale;
-    let h = this.grid.height * this.scale;
+    let w = this.grid.width * Config.scale;
+    let h = this.grid.height * Config.scale;
     this.miniMapBg.css({
-      "width": w.addPx(),
-      "height": h.addPx(),
-      "left": this.x.addPx(),
-      "top": this.y.addPx(),
+      "width": (w).addPx(),
+      "height": (h).addPx(),
+      "left": (Config.x).addPx(),
+      "top": (Config.y).addPx(),
       "position": "fixed",
-      "background-color": this.bgColor,
-      "opacity": this.opacity
+      "background-color": Config.bgColor,
+      "opacity": Config.opacity
     });
 
     // Remove any old
@@ -120,8 +125,8 @@ var MiniMapHax = class {
   }
 
   drawMiniMap() {
-    this.cursors.each((cur, i) => {
-      cur.UIX = ;
+    this.cursors.each((i, cur) => {
+      cur.updateUI();
     });
   }
 
@@ -138,6 +143,11 @@ var Cursor = class {
     this.color2 = color2;
     this.elUi = elUi;
     this.liveEl = liveEl;
+  }
+
+  updateUI() {
+    this.UIX = this.x * Config.scale;
+    this.UIY = this.y * Config.scale;
   }
 
   get xPx() {
@@ -157,11 +167,11 @@ var Cursor = class {
   }
 
   set UIX(x) {
-    this.elUi.css("left") = x.addPx();
+    this.elUi.css("left", (x).addPx());
   }
 
   set UIY(y) {
-    this.elUi.css("top") = y.addPx();
+    this.elUi.css("top", (y).addPx());
   }
 
 }
