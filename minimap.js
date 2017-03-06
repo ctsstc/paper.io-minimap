@@ -15,15 +15,15 @@ String.prototype.removeRight = function (i) {
   return Util.removeRight(this, i);
 }
 
-String.prototype.removePx = function() {
+String.prototype.removePx = function () {
   return Util.removePx(this);
 }
 
-String.prototype.addPx = function() {
+String.prototype.addPx = function () {
   return this + "px";
 }
 
-Number.prototype.addPx = function() {
+Number.prototype.addPx = function () {
   return this + "px";
 }
 
@@ -33,7 +33,8 @@ var Config = {
   y: 60,
   bgColor: "#222",
   opacity: ".7",
-  zIndex: 2
+  zIndex: 2,
+  gridSize: 30 // game grid size
 };
 
 var MiniMapHax = class {
@@ -56,6 +57,9 @@ var MiniMapHax = class {
   }
 
   initCursors() {
+
+    let cursorContainer = $("<div id='myCursors'></div>");
+
     let cursors = this.cursorsEl.find("b").map((i, el) => {
       el = $(el);
       let name = el.data("playername");
@@ -70,11 +74,14 @@ var MiniMapHax = class {
         "position": "absolute",
         "background-color": color1
       });
-      // Add to DOM
-      this.miniMapBg.append(cursorUi);
+      // Add to cursor container
+      cursorContainer.append(cursorUi);
 
       return new Cursor(name, i, x, y, color1, color2, cursorUi, el);
     });
+
+    // Add cursors to DOM
+    this.miniMapBg.append(cursorContainer);
 
     // Cursor Styles
     this.myCursorsEl = $(".myCursor");
@@ -187,7 +194,47 @@ var Grid = class {
     this.height = height;
     this.x = x;
     this.y = y;
+    this.playgroundEl = $("#playground");
   }
+
+  get playground() {
+    let playground = this.playgroundByPlayer;
+    return Object.keys(playground).reduce((pre, cur) => {
+      return pre.concat(playground[cur]);
+    }, []);
+  }
+
+  get playgroundByPlayer() {
+    // Todo cache until an update is required
+    return this.playgroundEl.find("b").get().reduce((pre, cur) => {
+      cur = $(cur);
+      let name = cur.attr("class").removeRight(6); // remove "_owned"
+      let x = cur.css("left").removePx() / Config.gridSize;
+      let y = cur.css("top").removePx() / Config.gridSize;
+      let h = cur.css("height").removePx() / Config.gridSize;
+
+      // add key if not exists
+      if (!pre.hasOwnProperty(name))
+        pre[name] = [];
+
+      // add data to key
+      pre[name].push({
+        x: x,
+        y: y,
+        h: h
+      });
+
+      return pre;
+
+    }, {});
+  }
+
+  updateUI() {
+    this.playground.forEach((i, e) => {
+
+    });
+  }
+
 }
 
 // Todo, maybe try to switch over to mutation listeners
