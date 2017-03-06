@@ -45,8 +45,8 @@ var MiniMapHax = class {
     this.cursorsEl = $("#playcursors");
     this.myCursorsEl = false; // set later
     this.gridEl = $("#grid");
+    this.miniMapContainer = $("<div id='miniMapHax'></div>"); // set later
     this.grid = this.initGrid();
-    this.miniMapBg = false; // set later
 
     this.initMiniMap();
     this.cursors = this.initCursors();
@@ -54,6 +54,7 @@ var MiniMapHax = class {
 
   main() {
     this.drawMiniMap();
+    this.grid.updateUI();
   }
 
   initCursors() {
@@ -70,10 +71,12 @@ var MiniMapHax = class {
       x = x.removePx();
       y = y.removePx();
       let cursorUi = $(`<div id="player-${name}" class="myCursor"></div>`);
-      cursorUi.css({
+     
+     cursorUi.css({
         "position": "absolute",
         "background-color": color1
       });
+
       // Add to cursor container
       cursorContainer.append(cursorUi);
 
@@ -81,7 +84,7 @@ var MiniMapHax = class {
     });
 
     // Add cursors to DOM
-    this.miniMapBg.append(cursorContainer);
+    this.miniMapContainer.append(cursorContainer);
 
     // Cursor Styles
     this.myCursorsEl = $(".myCursor");
@@ -104,15 +107,14 @@ var MiniMapHax = class {
     height = height.removePx();
     x = x.removePx();
     y = y.removePx();
-    return new Grid(width, height, x, y);
+    return new Grid(width, height, x, y, this.miniMapContainer);
   }
 
   initMiniMap() {
     // Construct
-    this.miniMapBg = $("<div id='miniMapHax'></div>");
     let w = this.grid.width * Config.scale;
     let h = this.grid.height * Config.scale;
-    this.miniMapBg.css({
+    this.miniMapContainer.css({
       "width": (w).addPx(),
       "height": (h).addPx(),
       "left": (Config.x).addPx(),
@@ -130,7 +132,7 @@ var MiniMapHax = class {
     }
 
     // Add to page
-    this.body.append(this.miniMapBg);
+    this.body.append(this.miniMapContainer);
   }
 
   drawMiniMap() {
@@ -189,12 +191,20 @@ Cursor.width = 30;
 Cursor.height = 30;
 
 var Grid = class {
-  constructor(width, height, x, y) {
+  constructor(width, height, x, y, containerUi) {
     this.width = width;
     this.height = height;
     this.x = x;
     this.y = y;
+    this.containerUI = containerUi;
     this.playgroundEl = $("#playground");
+    this.playgroundContainer = $("<div id='myPlayground'></div>");
+
+    this.addUI();
+  }
+
+  addUI() {
+    this.containerUI.append(this.playgroundContainer);
   }
 
   get playground() {
@@ -212,6 +222,12 @@ var Grid = class {
       let x = cur.css("left").removePx() / Config.gridSize;
       let y = cur.css("top").removePx() / Config.gridSize;
       let h = cur.css("height").removePx() / Config.gridSize;
+      /**
+       * Could be implemented higher up to reduce redundancy, 
+       * but doesn't work too well with the other playground reduce
+       * ie: player: { color, playground/zone }
+       */
+      let color = cur.css("background-color");
 
       // add key if not exists
       if (!pre.hasOwnProperty(name))
@@ -221,7 +237,8 @@ var Grid = class {
       pre[name].push({
         x: x,
         y: y,
-        h: h
+        h: h,
+        color: color
       });
 
       return pre;
@@ -230,9 +247,31 @@ var Grid = class {
   }
 
   updateUI() {
-    this.playground.forEach((i, e) => {
 
+    // out with the old
+    this.containerUI.find(".zone").remove();
+
+    // in with the new
+    this.playground.forEach((e, i) => {
+
+      let zone = $("<div class='zone'></div>");
+      let x = e.x * Config.gridSize * Config.scale;
+      let y = e.y * Config.gridSize * Config.scale;
+      let w = Config.gridSize * Config.scale;
+      let h = e.h * Config.gridSize * Config.scale;
+
+      zone.css({
+        "background-color": e.color,
+        "left": x.addPx(),
+        "top": y.addPx(),
+        "width": w.addPx(),
+        "height": h.addPx(),
+        "position": "absolute"
+      });
+
+      this.playgroundContainer.append(zone);
     });
+
   }
 
 }
